@@ -1,1 +1,1 @@
-# music_visualizer
+# MIX-IFY
