@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MIX-IFY</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body,html{
+  height:100%;
+  font-family:'Segoe UI',sans-serif;
+  background:linear-gradient(#302b63,#24243e);
+  color:#fff;
+  overflow:hidden;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  position:relative;
+}
+.landing{
+  text-align:center;
+  z-index:2;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  background:transparent;
+}
+.landing h1{
+  font-size:5rem;
+  background:linear-gradient(90deg,#FF6EC7,#8A2BE2,#00FFFF);
+  -webkit-background-clip:text; background-clip:text;
+  color:transparent;
+  letter-spacing:3px;
+  margin-bottom:20px;
+}
+.landing p{
+  font-size:1.6rem;
+  color:#ddd;
+  margin-bottom:50px;
+  line-height:1.5;
+}
+.mix-btn{
+  font-size:2rem;
+  padding:20px 60px;
+  background:linear-gradient(135deg,#FF6EC7,#8A2BE2,#00FFFF);
+  border:none;border-radius:60px;color:#fff;
+  cursor:pointer;transition:all .4s ease;position:relative;z-index:2;
+}
+.mix-btn:hover{transform:scale(1.1);}
+.vinyl{
+  position:fixed;
+  width:80px;height:80px;border-radius:50%;
+  background:radial-gradient(circle at center, rgba(0,0,0,0.7) 30%, rgba(17,17,17,0.7) 40%, rgba(34,34,34,0.7) 50%, rgba(17,17,17,0.7) 60%, rgba(0,0,0,0.7) 100%);
+  border:2px solid rgba(51,51,51,0.7);
+  box-shadow:0 0 8px rgba(0,0,0,0.5);
+  z-index:1;
+  overflow:hidden;animation:spin 4s linear infinite;
+  opacity:0.7;
+}
+.vinyl::after{
+  content:'';
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:radial-gradient(circle,#ff6ec7 0%,#8A2BE2 100%);
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  z-index:2;
+}
+.vinyl::before{
+  content:'';position:absolute;width:100%;height:100%;border-radius:50%;
+  background:repeating-radial-gradient(circle,transparent 0px,transparent 1px,rgba(255,255,255,0.05) 1px,rgba(255,255,255,0.05) 2px);z-index:1;
+}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="landing">
+  <h1>MIX-IFY</h1>
+  <p>Feel the beat. Spin. Scratch. Mix like a pro.</p>
+  <button class="mix-btn" onclick="goToDeck()">MIX NOW</button>
+</div>
+
+<script>
+function goToDeck(){ window.location.href="deck.html"; }
+
+const vinylCount = 10;
+const size = 80;
+const speedUpFactor = 1.05;
+let vinyls = [];
+
+function createVinyl(x,y,vx,vy){
+  const div = document.createElement('div');
+  div.classList.add('vinyl');
+  document.body.appendChild(div);
+  return {el:div, x, y, vx, vy};
+}
+
+function distance(a,b){
+  return Math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2);
+}
+
+function update(){
+  const w = window.innerWidth - size;
+  const h = window.innerHeight - size;
+
+  for(let i=0;i<vinyls.length;i++){
+    for(let j=i+1;j<vinyls.length;j++){
+      const A = vinyls[i], B = vinyls[j];
+      if(distance(A,B) < size){
+        let tempVx = A.vx;
+        let tempVy = A.vy;
+        A.vx = B.vx * speedUpFactor;
+        A.vy = B.vy * speedUpFactor;
+        B.vx = tempVx * speedUpFactor;
+        B.vy = tempVy * speedUpFactor;
+
+        const overlap = size - distance(A,B);
+        const dx = (B.x - A.x)/distance(A,B);
+        const dy = (B.y - A.y)/distance(A,B);
+        A.x -= dx * overlap/2;
+        A.y -= dy * overlap/2;
+        B.x += dx * overlap/2;
+        B.y += dy * overlap/2;
+      }
+    }
+  }
+
+  for(const v of vinyls){
+    v.x += v.vx;
+    v.y += v.vy;
+    if(v.x<0||v.x>w) v.vx *= -1;
+    if(v.y<0||v.y>h) v.vy *= -1;
+    v.el.style.left = v.x+"px";
+    v.el.style.top  = v.y+"px";
+  }
+  requestAnimationFrame(update);
+}
+
+function init(){
+  for(let i=0;i<vinylCount;i++){
+    let x,y,tries=0;
+    do{
+      x=Math.random()*(window.innerWidth-size);
+      y=Math.random()*(window.innerHeight-size);
+      tries++;
+    }while(vinyls.some(v=>distance({x,y},v)<size)&&tries<200);
+    let vx=(Math.random()-.5)*3, vy=(Math.random()-.5)*3;
+    vinyls.push(createVinyl(x,y,vx,vy));
+  }
+  update();
+}
+
+init();
+</script>
+</body>
+</html>
